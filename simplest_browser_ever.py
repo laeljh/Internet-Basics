@@ -2,6 +2,19 @@
 from queue import Empty
 import socket
 import re
+#TODO SEPARATE CONNECTING TO HOST FROM SENDING A REQUEST
+#1. CONNECT TO HOST
+#2. SEND REQUEST
+#3. RECEIVE RESPONSE
+#4. PROCESS RESPONSE
+#5. SHOW WEBSITE IN CODE
+#6. SHOW WEBSITE AS TEXT
+#7. SHOW LINKS
+#8. SELECT LINK
+#9. FOLLOW LINK 
+#   -> IF LEAVING CURRENT DOMAIN CLOSE CONNECTION AND START FROM 1
+#   -> IF STAYING ON CURRENT DOMAIN START FROM 2
+
 
 
 #creates a simple cli browser that connects to specific server 
@@ -20,7 +33,7 @@ def browse(domain_name, port=80, filepath=None):
         print(f'Connection established!')
         #generate a GET request that will sent to the server
         #along with the http standard
-        print(f'Sending GET request for file {domain_name}/{filepath}')
+        print(f'Sending GET request for file {domain_name}{filepath}')
         cmd = f'GET http://{domain_name}{filepath} HTTP/1.0\r\n\r\n'.encode()
         mysock.send(cmd)
         
@@ -45,21 +58,24 @@ def process_response(response, verbose=False):
         #Split response into reply header and html body
         parts=response.split(sep='\r\n\r\n')
         (header,*file) = parts 
-        body = file[0]
-        return body if not verbose else response
+        body = file if not verbose else response
+        return body
     
-def show_website(html):
-        lines = {}
-        for index, html_line in enumerate(html):
-            lines += {index : html_line}
-            print(f'{index}. {html_line}')
-        return lines    
+def show_website(html_source):
+    try:
+        html_lines = [line for line in html_source[0].split(sep='\n')]
+        for index, html_line in enumerate(html_lines):
+            print(f'{index}. {html_line}')  
+    except TypeError:
+        print("Wrong type")
+    return html_source[0].lower()
 
 def show_links(html):
     #find patterns of <a ** href="http://">LINK</a>
     #unpack to links = [(link, name)] 
     #use regular expressions to find all links
-    print('Select a link to follow...')
+    print('Detected links...')
+    #to lower case
     links = re.findall(r'<a.*href="(.*)">(.*)</a>', html)
     urls = [url for url, _ in links]
     #show numbered urls and names
@@ -68,8 +84,8 @@ def show_links(html):
         print(f'{index}. {name} -> ({url})')
     return urls
 
-def select_url(number, urls):
-    url = urls[number]
+def select_url(i, urls):
+    url = urls[i]
     return url
 
 def follow_link(link):
@@ -80,18 +96,14 @@ def follow_link(link):
     print(f'Following link {link}')
     print(f'Detected domain: {domain}')
     print(f'Detected file: {path}')
-    browse(domain_name, filepath=path)
+    return browse(domain_name=domain, filepath=path)
     
+def start_browser(link):
+    resp = follow_link(link)
+    html = process_response(resp)
+    html = show_website(html)
+    urls = show_links(html)
+    #url = select_url(int(input("Provide link number: ")), urls)
+    #start_browser(url)
     
-    
-
-
-
-#browse(domain_name, connection_port, file_to_get)
-#test_response = browse('google.com')
-#test_processed_response = process_response(test_response)
-some_html = "<html><body><h1>Title</h1></br><p>Paragraph</p><a href=\"https://google.com/index.html\">Home</a></body><html>"
-print(some_html)
-some_urls = show_links(some_html)
-for url in some_urls:
-    follow_link(url)
+start_browser('google.com/index.html')   
