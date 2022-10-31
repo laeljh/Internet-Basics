@@ -1,7 +1,6 @@
-from http.client import responses
+
 from queue import Empty
 import socket
-from urllib import response
 
 
 #creates a simple cli browser that connects to specific server 
@@ -47,17 +46,22 @@ def process_response(response, verbose=False):
         return body if not verbose else response
     
 def show_website(html):
+        lines = {}
         for index, html_line in enumerate(html):
-            print(f'{index}. {html_line}')    
+            lines += {index : html_line}
+            print(f'{index}. {html_line}')
+        return lines    
 
 def show_links(html):
     #find patterns of <a ** href="http://">LINK</a>
     #unpack to links = [(link, name)] 
-    pass  
+    links = re.findall(r'href=+',html)
+    print(links)
 
 
 
 #browse(domain_name, connection_port, file_to_get)
-test_response = browse('google.com')
-test_processed_response = process_response(test_response)
-print(test_processed_response)
+#test_response = browse('google.com')
+#test_processed_response = process_response(test_response)
+some_html = "<html><body><h1>Title</h1></br><p>Paragraph</p><a href=\"index.html\">Home</a></body><html>"
+#print(test_processed_response)
